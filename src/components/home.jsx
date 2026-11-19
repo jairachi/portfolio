@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { PROJECTS, STATUS, LINK_STYLE, CREDIT } from "../data/projects";
 
 // Assets live in public/sao/. BASE_URL keeps paths correct on GitHub Pages.
 const A = `${import.meta.env.BASE_URL}sao/`;
@@ -7,7 +9,7 @@ const icon = (name, on) => `${A}icons/${name}${on ? "_on" : ""}.svg`;
 // ---- Content: edit these, not the markup ----
 const PLAYER = {
 	name: "Michal Jireh L. de la Cruz",
-	short: "Michal",
+	short: "Jireh",
 	role: "Software and Game Developer",
 	pitch: "I treat every project like a level worth finishing.",
 };
@@ -19,30 +21,11 @@ const NAV = [
 	{ id: "contact", icon: "message", label: "Contact" },
 ];
 
-// image: path to a picture, or null for the blue grid placeholder
-const QUESTS = [
-	{
-		title: "Project One",
-		note: "One or two sentences on what it does and the result.",
-		tag: "Completed",
-		image: null,
-		href: "#",
-	},
-	{
-		title: "Project Two",
-		note: "One or two sentences on what it does and the result.",
-		tag: "Completed",
-		image: null,
-		href: "#",
-	},
-	{
-		title: "Project Three",
-		note: "Currently building this one.",
-		tag: "In progress",
-		image: null,
-		href: "#",
-	},
-];
+// The landing page shows at most three projects. Edit them in src/data/projects.js
+const SHOWN = PROJECTS.slice(0, 3);
+
+// Where "See more" goes. Placeholder until the projects page and its routing exist.
+const PROJECTS_PAGE = "#/projects";
 
 const SKILLS = [
 	{ label: "React", value: 85, icon: "one-handed-straight-sword" },
@@ -135,7 +118,8 @@ export default function Home() {
 	}, []);
 
 	const level = 1 + Math.floor(xp / 25);
-	const q = QUESTS[sel];
+	const q = SHOWN[sel] ?? SHOWN[0];
+	const st = STATUS[q.status] ?? { label: q.status, color: "#D5DAE3" };
 
 	return (
 		<div className="relative isolate min-h-screen w-full bg-[#070F24] text-left text-xl font-bold text-white font-['SAOUI',system-ui,sans-serif]">
@@ -239,49 +223,96 @@ export default function Home() {
 					</div>
 				</section>
 
-				{/* Projects: list on the left, details on the right */}
+				{/* Projects: first three from src/data/projects.js. List on the left, details on the right */}
 				<section id="quests" className="scroll-mt-20 py-16">
 					<Panel title="Quests">
 						<div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-							<ul className="divide-y divide-[#D5DAE3] border-b border-[#D5DAE3] md:border-b-0 md:border-r">
-								{QUESTS.map((item, i) => (
-									<li key={item.title}>
-										<button
-											onClick={() => setSel(i)}
-											aria-current={sel === i}
-											className={`group flex w-full items-center gap-4 px-6 py-5 text-left text-2xl font-bold ${FOCUS} ${sel === i ? "bg-[#F5A300] text-[#2B2F38]" : "bg-white hover:bg-[#EAEEF5]"}`}
-										>
-											<Icon
-												name="quest-message-box"
-												on={sel === i}
-												className="h-12 w-12"
-											/>
-											{item.title}
-										</button>
-									</li>
-								))}
-							</ul>
+							<div className="border-b border-[#D5DAE3] md:border-b-0 md:border-r">
+								<ul className="divide-y divide-[#D5DAE3]">
+									{SHOWN.map((item, i) => (
+										<li key={item.id}>
+											<button
+												onClick={() => setSel(i)}
+												aria-current={sel === i}
+												className={`group flex w-full items-center gap-4 px-6 py-5 text-left text-2xl font-bold ${FOCUS} ${sel === i ? "bg-[#F5A300] text-[#2B2F38]" : "bg-white hover:bg-[#EAEEF5]"}`}
+											>
+												<Icon
+													name="quest-message-box"
+													on={sel === i}
+													className="h-12 w-12"
+												/>
+												{item.title}
+											</button>
+										</li>
+									))}
+								</ul>
+								<div className="p-5 text-center">
+									<Link
+										to="/projects"
+										className={`group inline-flex items-center gap-3 rounded-full border-2 border-[#3C4350] py-2 pl-3 pr-8 text-xl font-bold hover:bg-[#3C4350] hover:text-white ${FOCUS}`}
+									>
+										<Icon name="plus" className="h-9 w-9" />
+										See more
+									</Link>
+								</div>
+							</div>
 							<div key={sel} className="sao-fade p-8">
 								<div
-									className="relative h-60 bg-cover bg-center"
+									className="relative h-60"
 									style={
-										q.image ? { backgroundImage: `url(${q.image})` } : GRID
+										q.image
+											? {
+													backgroundImage: `url(${import.meta.env.BASE_URL}${q.image})`,
+													// "cover" fills and crops; "contain" shows the whole image
+													backgroundSize:
+														q.imageFit === "contain" ? "contain" : "cover",
+													// which part stays visible when cropped
+													backgroundPosition: q.imagePosition ?? "center",
+													backgroundRepeat: "no-repeat",
+													backgroundColor: "#10151F", // bars shown by "contain"
+												}
+											: GRID
 									}
 								>
 									<span
-										className={`absolute left-3 top-3 rounded-sm px-4 py-1.5 text-lg font-bold ${q.tag === "Completed" ? "bg-[#8BD22B] text-[#1B2B08]" : "bg-[#F5A300] text-[#2B2F38]"}`}
+										className="absolute left-3 top-3 rounded-sm px-4 py-1.5 text-lg font-bold text-[#10151F]"
+										style={{ backgroundColor: st.color }}
 									>
-										{q.tag}
+										{st.label}
 									</span>
 								</div>
 								<h3 className="mt-6 text-3xl font-bold">{q.title}</h3>
-								<p className="mt-3 text-xl leading-relaxed">{q.note}</p>
-								<a
-									href={q.href}
-									className={`mt-6 inline-block rounded-full bg-[#F5A300] px-8 py-3 text-xl font-bold text-[#2B2F38] hover:bg-[#FFC14D] ${FOCUS}`}
-								>
-									Learn More
-								</a>
+								<p className="mt-1 text-xl text-[#8A4B00]">{q.tagline}</p>
+								<p className="mt-3 whitespace-pre-line text-xl leading-relaxed">
+									{q.description}
+								</p>
+								<ul className="mt-4 flex flex-wrap gap-2">
+									{q.tags.map((t) => (
+										<li
+											key={t}
+											className="rounded-sm bg-[#D5DAE3] px-3 py-1 text-base font-bold"
+										>
+											{t}
+										</li>
+									))}
+								</ul>
+								<div className="mt-6 flex flex-wrap gap-3">
+									{q.links.map((l) => {
+										const ls = LINK_STYLE[l.type] ?? LINK_STYLE.other;
+										return (
+											<a
+												key={l.url}
+												href={l.url}
+												target="_blank"
+												rel="noopener noreferrer"
+												style={{ backgroundColor: ls.bg, color: ls.text }}
+												className={`rounded-full px-8 py-3 text-xl font-bold hover:brightness-110 ${FOCUS}`}
+											>
+												{l.label}
+											</a>
+										);
+									})}
+								</div>
 							</div>
 						</div>
 					</Panel>
@@ -348,8 +379,8 @@ export default function Home() {
 						darkblackswords
 					</a>
 					, shared by{" "}
-					<a className="underline" href="https://www.deviantart.com/gpbeta">
-						GPBeta
+					<a className="underline" href={CREDIT.url}>
+						{CREDIT.name}
 					</a>{" "}
 					on DeviantArt.
 				</p>
